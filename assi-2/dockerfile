@@ -1,0 +1,9 @@
+FROM php:8.2-fpm
+
+RUN pecl install redis \
+	&& docker-php-ext-enable redis \
+	&& docker-php-ext-install mysqli 
+
+# command "docker-php-ext-enable redis" --> add "extension=redis" in /usr/local/etc/php/conf.d/docker-php-ext-redis.ini
+# PECL extensions, reference https://hub.docker.com/_/php
+# PHP extension list, reference https://docs.php.earth/docker/php-extensions/
