@@ -1,0 +1,42 @@
+FROM ubuntu:20.04
+LABEL maintainer="Yating Zhang" email="s4797016@student.uq.edu.au"
+ENV     PHPVER=8.2 TZ="Australia/Brisbane"
+
+RUN     apt-get update \
+        && apt-get install --no-install-recommends \
+                        --no-install-suggests -qq \
+                        -y wget gnupg2 ca-certificates\
+        && wget https://nginx.org/keys/nginx_signing.key\
+        && apt-key add nginx_signing.key\
+        && echo "deb https://nginx.org/packages/mainline/ubuntu/ focal nginx"\
+                >> /etc/apt/sources.list\
+        && echo "deb-src https://nginx.org/packages/mainline/ubuntu/ focal nginx"\
+                >> /etc/apt/sources.list \
+        && apt-get install --no-install-recommends\
+                        --no-install-suggests -qq -y nginx 
+        
+RUN     ln -sf /dev/stdout /var/log/nginx/access.log\
+        && ln -sf /dev/stderr /var/log/nginx/error.log \
+        # ---nginx log end ---
+        && apt-get install --no-install-recommends \
+                        --no-install-suggests -qq \
+                        -y software-properties-common \
+        && add-apt-repository ppa:ondrej/php \
+        && apt-get update \
+        && apt-get install --no-install-recommends\
+                        --no-install-suggests -qq -y php${PHPVER}-fpm \
+        && echo $TZ > /etc/timezone \
+        && chmod -R +x /var/www/html \
+        && rm -rf /var/lib/apt/lists/*
+
+
+
+COPY    $PWD/src/nginx.ini /etc/nginx/sites-available/default
+COPY    $PWD/src/. /var/www/html
+
+VOLUME ["/var/www/html"]
+WORKDIR /var/www/html
+EXPOSE  80
+ENTRYPOINT service php${PHPVER}-fpm start && nginx -g "daemon off;"
+
+
